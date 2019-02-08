@@ -1,13 +1,12 @@
 {
   "name": "yaktime",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "description": "",
   "main": "lib/yaktime.js",
   "directories": {
     "lib": "lib"
   },
   "devDependencies": {
-    "@babel/runtime": "^7.3.1",
     "@babel/core": "^7.2.2",
     "@babel/plugin-proposal-class-properties": "^7.3.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.3.2",
@@ -15,6 +14,7 @@
     "@babel/preset-env": "^7.3.1",
     "@babel/preset-react": "^7.0.0",
     "@babel/preset-typescript": "^7.1.0",
+    "@babel/runtime": "^7.3.1",
     "@types/content-type": "^1.1.2",
     "@types/debug": "^0.0.31",
     "@types/deepmerge": "^2.2.0",
