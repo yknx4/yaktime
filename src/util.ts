@@ -48,6 +48,11 @@ export interface YakTimeOpts {
    */
   hash?: RequestHasher
   /**
+   * Function that returns hash of existing requests
+   * this will be use to migrate from old requests to newer
+   */
+  oldHash?: RequestHasher
+  /**
    * If set to true, it will migrate old files to new file using a newer faster hasher.
    * old files will not be deleted, if `opts.hash` is defined, this will be ignored
    */

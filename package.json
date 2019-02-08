@@ -7,6 +7,7 @@
     "lib": "lib"
   },
   "devDependencies": {
+    "@babel/runtime": "^7.3.1",
     "@babel/core": "^7.2.2",
     "@babel/plugin-proposal-class-properties": "^7.3.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.3.2",
@@ -68,7 +69,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@babel/runtime": "^7.3.1",
     "content-type": "^1.0.4",
     "debug": "^4.1.1",
     "deepmerge": "^3.1.0",
