@@ -80,6 +80,20 @@
     "restify-errors": "^6.1.1",
     "xxhashjs": "^0.2.2"
   },
+  "keywords": [
+    "http",
+    "https",
+    "record",
+    "playback",
+    "mock",
+    "service",
+    "vcr",
+    "yakbak"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:yknx4/yaktime.git"
+  },
   "husky": {
     "hooks": {
       "pre-commit": "NODE_OPTIONS=--max-old-space-size=4096 lint-staged"
