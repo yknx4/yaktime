@@ -1,6 +1,13 @@
 # yaktime
 
+![](https://img.shields.io/npm/v/yaktime.svg?style=flat)
 [![Build Status](https://travis-ci.org/yknx4/yaktime.svg?branch=master)](https://travis-ci.org/yknx4/yaktime)
+![](https://img.shields.io/npm/dt/yaktime.svg?style=flat)
+![](https://img.shields.io/david/yknx4/yaktime.svg?style=flat)
+![](https://img.shields.io/codecov/c/github/yknx4/yaktime.svg?style=flat)
+[![DeepScan grade](https://deepscan.io/api/teams/2882/projects/4319/branches/35118/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=2882&pid=4319&bid=35118)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/yknx4/yaktime.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/yknx4/yaktime/alerts/)
+[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/yknx4/yaktime.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/yknx4/yaktime/context:javascript)
 
 Record HTTP interactions The Node Way™. Inspired by ruby's [vcr][1].
 

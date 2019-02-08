@@ -1,0 +1,12 @@
+language: node_js
+cache: yarn
+node_js:
+ - 'lts/*'
+ - 'lts/carbon'
+ - 'node'
+before_script:
+  - yarn build
+script:
+- yarn test --coverage
+after_success:
+  - yarn coverage
