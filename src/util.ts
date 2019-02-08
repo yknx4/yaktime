@@ -1,7 +1,6 @@
 import { promisify } from 'util'
 import { readFile, writeFile, existsSync, copyFile } from 'fs'
 import mkdirp from 'mkdirp'
-import rimraf from 'rimraf'
 import { IncomingMessage, ServerResponse } from 'http'
 import Debug from 'debug'
 import { ModuleNotFoundError, InvalidStatusCodeError, RecordingDisabledError } from './errors'
@@ -10,7 +9,6 @@ import { RequestHasherOptions } from './requestHasher'
 const debug = Debug('yaktime:util')
 
 export const mkdir = promisify(mkdirp)
-export const rmrf = promisify(rimraf)
 
 export const readFileAsync = promisify(readFile)
 export const writeFileAsync = promisify(writeFile)
