@@ -12,13 +12,13 @@ describe('proxy', () => {
   let serverInfo: AddressInfo
   let req: IncomingMessage
 
-  beforeEach(done => {
-    server = createServer(done)
+  beforeEach(async () => {
+    server = await createServer(null)
     serverInfo = server.address() as AddressInfo
   })
 
-  afterEach(done => {
-    server.teardown(done)
+  afterEach(async () => {
+    await server.teardown(null)
   })
 
   beforeEach(() => {
@@ -37,6 +37,19 @@ describe('proxy', () => {
     })
 
     subject(req, [], `http://127.0.0.1:${serverInfo.port}`).catch(function(err: any) {
+      done(err)
+    })
+  })
+
+  it('overrides the host if one is set on the incoming request', function(done) {
+    server.once('request', function(preq) {
+      expect(preq.headers.host).toEqual(`127.0.0.1:${serverInfo.port}`)
+      done()
+    })
+
+    req.headers['host'] = 'A.N.OTHER'
+
+    subject(req, [], `http://127.0.0.1:${serverInfo.port}`).catch(function(err) {
       done(err)
     })
   })
