@@ -1,5 +1,9 @@
 # Change Log
 
+## [3.1.6] - 2019-02-19
+
+- Add tooling for code review
+
 ## [3.1.3] - 2019-02-19
 
 - Remove another dependency
