@@ -8,7 +8,7 @@ import * as path from 'path'
 
 import { createServer, TestServer } from './test/helpers/server'
 import { createTmpdir, Dir } from './test/helpers/tmpdir'
-import { AddressInfo, Socket } from 'net'
+import { AddressInfo } from 'net'
 import { tapename, RequestHasher } from './util'
 import { requestHasher } from './requestHasher'
 import { tapeMigrator } from './tapeMigrator'
