@@ -1,6 +1,6 @@
 # yaktime
 
-[![Build Status](https://travis-ci.org/yknx4/yaktime.svg?branch=master)](https://travis-ci.org/yknx4/yaktime)
+[![DeepScan grade](https://deepscan.io/api/teams/2882/projects/4319/branches/35118/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=2882&pid=4319&bid=35118)[![Build Status](https://travis-ci.org/yknx4/yaktime.svg?branch=master)](https://travis-ci.org/yknx4/yaktime)
 
 Record HTTP interactions The Node Way™. Inspired by ruby's [vcr][1].
 
