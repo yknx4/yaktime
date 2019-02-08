@@ -4,7 +4,11 @@
 
 import * as path from 'path'
 import { tmpdir } from 'os'
-import { rmrf, mkdir } from '../../util'
+import { mkdir } from '../../util'
+import rimraf from 'rimraf'
+import { promisify } from 'util'
+
+export const rmrf = promisify(rimraf)
 
 /**
  * Creates a temporary directory for use in tests.

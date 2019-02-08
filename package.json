@@ -23,7 +23,6 @@
     "@types/jest": "^24.0.0",
     "@types/lodash": "^4.14.120",
     "@types/lodash.map": "^4.6.13",
-    "@types/mkdirp": "^0.5.2",
     "@types/node": "^10.12.21",
     "@types/restify-errors": "^4.3.3",
     "@types/rimraf": "^2.0.2",
@@ -71,6 +70,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@types/mkdirp": "^0.5.2",
     "content-type": "^1.0.4",
     "debug": "^4.1.1",
     "deepmerge": "^3.1.0",
