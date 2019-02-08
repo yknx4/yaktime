@@ -6,3 +6,6 @@ node_js:
  - 'node'
 before_script:
   - yarn build
+script:
+- yarn test
+- yarn coverage
