@@ -18,6 +18,7 @@
     "importHelpers": false,
     "pretty": true,
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   }
 }
