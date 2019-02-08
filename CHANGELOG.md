@@ -1,6 +1,6 @@
 # Change Log
 
-## [3.1.2] - 2019-02-19
+## [3.1.3] - 2019-02-19
 
 - Remove another dependency
 - Allow custom oldHasher function in options when migrating
