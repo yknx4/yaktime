@@ -1,0 +1,11 @@
+src
+node_modules
+.vscode
+tmp
+obj
+.env
+etc
+input
+markdown
+yarn-error.log
+coverage

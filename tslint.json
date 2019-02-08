@@ -1,0 +1,11 @@
+{
+  "extends": ["tslint-sonarts", "tslint-config-standard"],
+  "rules": {
+    "no-null-keyword": false,
+    "await-promise": false,
+    "strict-type-predicates": false,
+    "jsdoc-format": false,
+    "no-empty-character-class": false,
+    "no-unexpected-multiline": false
+  }
+}

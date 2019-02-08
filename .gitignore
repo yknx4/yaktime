@@ -1,0 +1,15 @@
+lib
+node_modules
+.vscode
+lib/*.d.ts
+**/*.map
+tmp
+obj
+.env
+coverage
+**/*.log
+junit.xml
+*.log
+scripts/results
+scripts/*.json
+erroredSchema.json

@@ -1,0 +1,14 @@
+{
+  "moduleFileExtensions": ["ts", "js", "json"],
+  "testMatch": ["<rootDir>/**/*.test.ts"],
+  "clearMocks": true,
+  "reporters": ["default", "jest-junit"],
+  "collectCoverageFrom": [
+    "src/**/*.{ts,tsx}",
+    "!**/node_modules/**",
+    "!**/__*__/*",
+    "!**/index.ts",
+    "!**/*.d.ts"
+  ],
+  "errorOnDeprecated": true
+}
