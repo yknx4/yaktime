@@ -3,7 +3,6 @@
   "version": "3.1.0",
   "description": "",
   "main": "lib/yaktime.js",
-  "private": true,
   "directories": {
     "lib": "lib"
   },
@@ -62,8 +61,12 @@
     "yakbak": "lib/cli.js",
     "yaktime": "lib/cli.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": {
+    "name": "Ale Figueroa",
+    "email": "me@ale.world",
+    "url": "http://www.ale.world"
+  },
+  "license": "MIT",
   "dependencies": {
     "@babel/runtime": "^7.3.1",
     "content-type": "^1.0.4",
