@@ -8,4 +8,5 @@ before_script:
   - yarn build
 script:
 - yarn test --coverage
-- yarn coverage
+after_success:
+  - yarn coverage
