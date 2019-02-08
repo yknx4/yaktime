@@ -10,10 +10,10 @@ const debug = Debug('yaktime:migrator')
 const incMessH = require('incoming-message-hash')
 const oldHasher: RequestHasher = incMessH.sync
 
-type tapeMigratorOptions = 'dirname'
+type tapeMigratorOptions = 'dirname' | 'oldHash'
 export const tapeMigrator = (newHasher: RequestHasher, opts: Pick<YakTimeOpts, tapeMigratorOptions>) =>
   async function tapeMigrator (req: IncomingMessage, body: Buffer[] = []) {
-    const oldFileName = path.join(opts.dirname, tapename(oldHasher, req, body))
+    const oldFileName = path.join(opts.dirname, tapename(opts.oldHash || oldHasher, req, body))
     const newFileName = path.join(opts.dirname, tapename(newHasher, req, body))
     const oldExists = existsSync(oldFileName)
 

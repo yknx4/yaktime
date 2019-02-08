@@ -1,6 +1,11 @@
 # Change Log
 
-## [3.0.1] - 2019-02-19
+## [3.1.2] - 2019-02-19
+
+- Remove another dependency
+- Allow custom oldHasher function in options when migrating
+
+## [3.1.1] - 2019-02-19
 
 - Migrated codebase to Typescript
 - Updated request hasher to allow header and query exclusions
