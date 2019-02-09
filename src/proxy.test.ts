@@ -4,7 +4,7 @@
 
 import { proxy as subject } from './proxy'
 import { createServer, TestServer } from './test/helpers/server'
-import { IncomingMessage } from 'http'
+import { IncomingMessage, ServerResponse } from 'http'
 import { AddressInfo, Socket } from 'net'
 
 describe('proxy', () => {
@@ -45,6 +45,19 @@ describe('proxy', () => {
     const preq = server.nextRequest()
     await subject(req, [], `http://127.0.0.1:${serverInfo.port}`)
     expect((await preq).headers.host).toEqual(`127.0.0.1:${serverInfo.port}`)
+  })
+
+  it('rewrites the location if there is a redirection', async () => {
+    expect.hasAssertions()
+    req.headers['host'] = `127.0.0.1:${serverInfo.port}`
+    server.prependOnceListener('request', (req: IncomingMessage, res: ServerResponse) => {
+      res.statusCode = 301
+      res.setHeader('host', `localhost:${serverInfo.port}`)
+      res.setHeader('location', `http://localhost:${serverInfo.port}/potito`)
+      res.end()
+    })
+    const res = await subject(req, [], `http://localhost:${serverInfo.port}`)
+    expect(res.headers['location']).toEqual(`http://127.0.0.1:${serverInfo.port}/potito`)
   })
 
   test('proxies the request body', done => {

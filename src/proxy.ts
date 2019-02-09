@@ -46,13 +46,11 @@ export function proxy (res: http.IncomingMessage, body: Buffer[], host: string):
       const statusCode = pres.statusCode || 0
       if (statusCode >= 300 && statusCode < 400) {
         const location = pres.headers['location'] || ''
-        debug('redirect', 'rewriting', location)
+        debug('redirect', 'rewriting', uri.host, '=>', res.headers['host'])
         pres.headers['location'] = location.replace(uri.host || '', res.headers['host'] || '')
       }
       resolve(pres as YakTimeIncomingMessage)
     })
-
-    preq.setHeader('Host', uri.host || '')
 
     debug('req', res.url, 'host', uri.host)
 

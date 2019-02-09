@@ -23,6 +23,9 @@ export async function createServer (failRequest = false, handler?: YakTimeServer
   const requests: http.IncomingMessage[] = []
 
   let defaultHandler: YakTimeServer = (req, res) => {
+    if (res.finished) {
+      return
+    }
     res.statusCode = failRequest === true ? 404 : 201
     res.setHeader('Content-Type', 'text/html')
     res.setHeader('Date', 'Sat, 26 Oct 1985 08:20:00 GMT')
