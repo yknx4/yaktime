@@ -29,27 +29,27 @@ describe('proxy', () => {
   })
 
   test('proxies the request', done => {
-    server.once('request', function(preq: { method: any; url: any; headers: { host: any } }) {
+    server.once('request', function (preq: { method: any; url: any; headers: { host: any } }) {
       expect(preq.method).toEqual(req.method)
       expect(preq.url).toEqual(req.url)
       expect(preq.headers.host).toEqual('127.0.0.1' + ':' + serverInfo.port)
       done()
     })
 
-    subject(req, [], `http://127.0.0.1:${serverInfo.port}`).catch(function(err: any) {
+    subject(req, [], `http://127.0.0.1:${serverInfo.port}`).catch(function (err: any) {
       done(err)
     })
   })
 
-  it('overrides the host if one is set on the incoming request', function(done) {
-    server.once('request', function(preq) {
+  it('overrides the host if one is set on the incoming request', function (done) {
+    server.once('request', function (preq) {
       expect(preq.headers.host).toEqual(`127.0.0.1:${serverInfo.port}`)
       done()
     })
 
     req.headers['host'] = 'A.N.OTHER'
 
-    subject(req, [], `http://127.0.0.1:${serverInfo.port}`).catch(function(err) {
+    subject(req, [], `http://127.0.0.1:${serverInfo.port}`).catch(function (err) {
       done(err)
     })
   })
@@ -58,14 +58,14 @@ describe('proxy', () => {
     let body = [Buffer.from('a'), Buffer.from('b'), Buffer.from('c')]
     type onType = (buf?: any, cb?: any) => void
 
-    server.once('request', function(_req: { on: onType }) {
+    server.once('request', function (_req: { on: onType }) {
       let data: Buffer[] = []
 
-      _req.on('data', function(buf: Buffer) {
+      _req.on('data', function (buf: Buffer) {
         data.push(buf)
       })
 
-      _req.on('end', function() {
+      _req.on('end', function () {
         expect(Buffer.concat(data)).toEqual(Buffer.concat(body))
         done()
       })
@@ -73,7 +73,7 @@ describe('proxy', () => {
 
     req.method = 'POST'
 
-    subject(req, body, `http://127.0.0.1:${serverInfo.port}`).catch(function(err: any) {
+    subject(req, body, `http://127.0.0.1:${serverInfo.port}`).catch(function (err: any) {
       done(err)
     })
   })
@@ -84,7 +84,7 @@ describe('proxy', () => {
         expect(res.statusCode).toEqual(201)
         done()
       })
-      .catch(function(err: any) {
+      .catch(function (err: any) {
         done(err)
       })
   })

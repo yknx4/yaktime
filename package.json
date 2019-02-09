@@ -104,7 +104,7 @@
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
       "prettier --no-semi --single-quote --print-width 150 --write",
-      "tslint -e '**/*.test.ts' -e '**/__*__' --project tsconfig.lint.json --fix -t verbose",
+      "tslint --project tsconfig.lint.json --fix -t verbose",
       "git add"
     ],
     "**/*.{json,css,md}": [
