@@ -43,11 +43,11 @@ export function proxy (res: http.IncomingMessage, body: Buffer[], host: string):
       rejectUnauthorized: false
     }
     const preq = mod.request(request, function (pres) {
-      const statusCode = pres.statusCode || 0
-      if (statusCode >= 300 && statusCode < 400) {
-        const location = pres.headers['location'] || ''
+      const statusCode = pres.statusCode
+      if (statusCode != null && statusCode >= 300 && statusCode < 400) {
+        const location = pres.headers['location'] as string
         debug('redirect', 'rewriting', uri.host, '=>', res.headers['host'])
-        pres.headers['location'] = location.replace(uri.host || '', res.headers['host'] || '')
+        pres.headers['location'] = location.replace(uri.host as string, res.headers['host'] as string)
       }
       resolve(pres as YakTimeIncomingMessage)
     })
