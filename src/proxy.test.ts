@@ -28,30 +28,23 @@ describe('proxy', () => {
     req.headers['connection'] = 'close'
   })
 
-  test('proxies the request', done => {
-    server.once('request', function (preq: { method: any; url: any; headers: { host: any } }) {
-      expect(preq.method).toEqual(req.method)
-      expect(preq.url).toEqual(req.url)
-      expect(preq.headers.host).toEqual('127.0.0.1' + ':' + serverInfo.port)
-      done()
-    })
+  test('proxies the request', async () => {
+    expect.hasAssertions()
 
-    subject(req, [], `http://127.0.0.1:${serverInfo.port}`).catch(function (err: any) {
-      done(err)
-    })
+    const _preq = server.nextRequest()
+    await subject(req, [], `http://127.0.0.1:${serverInfo.port}`)
+    const preq = await _preq
+    expect(preq.method).toEqual(req.method)
+    expect(preq.url).toEqual(req.url)
+    expect(preq.headers.host).toEqual('127.0.0.1' + ':' + serverInfo.port)
   })
 
-  it('overrides the host if one is set on the incoming request', function (done) {
-    server.once('request', function (preq) {
-      expect(preq.headers.host).toEqual(`127.0.0.1:${serverInfo.port}`)
-      done()
-    })
-
+  it('overrides the host if one is set on the incoming request', async () => {
+    expect.hasAssertions()
     req.headers['host'] = 'A.N.OTHER'
-
-    subject(req, [], `http://127.0.0.1:${serverInfo.port}`).catch(function (err) {
-      done(err)
-    })
+    const preq = server.nextRequest()
+    await subject(req, [], `http://127.0.0.1:${serverInfo.port}`)
+    expect((await preq).headers.host).toEqual(`127.0.0.1:${serverInfo.port}`)
   })
 
   test('proxies the request body', done => {
@@ -78,14 +71,8 @@ describe('proxy', () => {
     })
   })
 
-  test('yields the response', done => {
-    subject(req, [], `http://127.0.0.1:${serverInfo.port}`)
-      .then((res: { statusCode?: number }) => {
-        expect(res.statusCode).toEqual(201)
-        done()
-      })
-      .catch(function (err: any) {
-        done(err)
-      })
+  test('yields the response', async () => {
+    const res = await subject(req, [], `http://127.0.0.1:${serverInfo.port}`)
+    expect(res.statusCode).toEqual(201)
   })
 })

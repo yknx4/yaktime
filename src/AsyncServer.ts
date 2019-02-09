@@ -16,13 +16,13 @@ export interface AsyncServer extends Server {
   listenAsync (handle: any): Promise<void>
 
   closeAsync (): Promise<void>
-  wait (event: string): Promise<void>
+  nextRequest (): Promise<IncomingMessage>
 }
 
 export function createAsyncServer (requestListener?: (request: IncomingMessage, response: ServerResponse) => void): AsyncServer {
   const server = createServer(requestListener) as AsyncServer
   server.listenAsync = promisify(server.listen)
   server.closeAsync = promisify(server.close)
-  server.wait = (event: string) => new Promise(resolve => server.once(event, resolve))
+  server.nextRequest = () => new Promise(resolve => server.once('request', resolve))
   return server
 }
