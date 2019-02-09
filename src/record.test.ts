@@ -16,12 +16,12 @@ describe('record', () => {
   let tmpdir: Dir
   let req: http.ClientRequest
 
-  beforeEach(done => {
-    server = createServer(done)
+  beforeEach(async () => {
+    server = await createServer()
   })
 
-  afterEach(done => {
-    server.teardown(done)
+  afterEach(async () => {
+    await server.closeAsync()
   })
 
   beforeEach(async () => {

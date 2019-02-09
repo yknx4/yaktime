@@ -13,6 +13,7 @@ import { tapename, RequestHasher } from './util'
 import { requestHasher } from './requestHasher'
 import { tapeMigrator } from './tapeMigrator'
 import { yaktime } from './yaktime'
+import { notifyNotUsedTapes } from './tracker'
 
 const incMessH = require('incoming-message-hash')
 const messageHash: RequestHasher = incMessH.sync
@@ -27,18 +28,18 @@ describe('record', () => {
 
   beforeEach(async () => {
     tmpdir = await createTmpdir()
-    server = await createServer(null)
+    server = await createServer()
     serverInfo = server.address() as AddressInfo
-    proxyServer = await createServer(null, false, yaktime(`http://localhost:${serverInfo.port}`, { dirname: tmpdir.dirname, migrate: false }))
+    const opts = { dirname: tmpdir.dirname, migrate: false }
+    const tape = yaktime(`http://localhost:${serverInfo.port}`, opts)
+    proxyServer = await createServer(false, tape)
+    proxyServer.once('close', () => notifyNotUsedTapes(opts, tape.hits))
     proxyServerInfo = proxyServer.address() as AddressInfo
   })
 
   afterEach(async () => {
-    await server.teardown(null)
-    await proxyServer.teardown(null)
-  })
-
-  afterEach(async () => {
+    await server.closeAsync()
+    await proxyServer.closeAsync()
     await tmpdir.teardown()
   })
 

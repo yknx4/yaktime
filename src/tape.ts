@@ -22,9 +22,7 @@ function isHumanReadable (res: IncomingMessage) {
   const contentType = res.headers['content-type']
   const identityEncoding = !contentEncoding || contentEncoding === 'identity'
 
-  if (!contentType) {
-    return false
-  }
+  if (contentType == null) return
   const parsedContentType = contentTypeParse(contentType)
 
   return identityEncoding && isContentTypeHumanReadable(parsedContentType)

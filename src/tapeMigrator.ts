@@ -5,7 +5,7 @@ import { IncomingMessage } from 'http'
 import { existsSync } from 'fs'
 import { requestHasher } from './requestHasher'
 
-const debug = Debug('yaktime:migrator')
+const debug = Debug('yaktime:tape-migrator')
 
 const incMessH = require('incoming-message-hash')
 const oldHasher: RequestHasher = incMessH.sync
@@ -22,9 +22,9 @@ export const tapeMigrator = (newHasher: RequestHasher, opts: Pick<YakTimeOpts, t
       debug('old filename', oldFileName)
       const newExists = existsSync(newFileName)
       if (newExists) {
-        debug('skipping migration', newFileName, 'already exists')
-        return
+        return debug('skipping migration', newFileName, 'already exists')
       }
+
       debug('new filename', newFileName)
       await copyFileAsync(oldFileName, newFileName)
       debug('remove old file manually')

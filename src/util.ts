@@ -1,5 +1,5 @@
 import { promisify } from 'util'
-import { readFile, writeFile, existsSync, copyFile } from 'fs'
+import { readFile, writeFile, existsSync, copyFile, readdir } from 'fs'
 import mkdirp from 'mkdirp'
 import { IncomingMessage, ServerResponse } from 'http'
 import Debug from 'debug'
@@ -13,6 +13,7 @@ export const mkdir = promisify(mkdirp)
 export const readFileAsync = promisify(readFile)
 export const writeFileAsync = promisify(writeFile)
 export const copyFileAsync = promisify(copyFile)
+export const readDirAsync = promisify(readdir)
 
 /**
  * Returns the tape name for `req`.
@@ -62,7 +63,10 @@ export interface YakTimeOpts {
   hasherOptions?: RequestHasherOptions
 }
 
-export type YakTimeServer = (request: IncomingMessage, response: ServerResponse) => void
+export interface YakTimeServer {
+  (request: IncomingMessage, response: ServerResponse): void
+  hits?: Set<string>
+}
 
 export function resolveModule (file: string): Promise<string> {
   return new Promise((resolve, reject) => {

@@ -4,55 +4,74 @@
 
 import { proxy as subject } from './proxy'
 import { createServer, TestServer } from './test/helpers/server'
-import { IncomingMessage } from 'http'
-import { AddressInfo } from 'net'
+import { IncomingMessage, ServerResponse } from 'http'
+import { AddressInfo, Socket } from 'net'
 
 describe('proxy', () => {
   let server: TestServer
   let serverInfo: AddressInfo
   let req: IncomingMessage
 
-  beforeEach(done => {
-    server = createServer(done)
+  beforeEach(async () => {
+    server = await createServer()
     serverInfo = server.address() as AddressInfo
   })
 
-  afterEach(done => {
-    server.teardown(done)
+  afterEach(async () => {
+    await server.closeAsync()
   })
 
   beforeEach(() => {
-    req = new IncomingMessage(null)
+    req = new IncomingMessage((null as unknown) as Socket)
     req.method = 'GET'
     req.url = '/'
     req.headers['connection'] = 'close'
   })
 
-  test('proxies the request', done => {
-    server.once('request', function(preq: { method: any; url: any; headers: { host: any } }) {
-      expect(preq.method).toEqual(req.method)
-      expect(preq.url).toEqual(req.url)
-      expect(preq.headers.host).toEqual('127.0.0.1' + ':' + serverInfo.port)
-      done()
-    })
+  test('proxies the request', async () => {
+    expect.hasAssertions()
 
-    subject(req, [], `http://127.0.0.1:${serverInfo.port}`).catch(function(err: any) {
-      done(err)
+    const _preq = server.nextRequest()
+    await subject(req, [], `http://127.0.0.1:${serverInfo.port}`)
+    const preq = await _preq
+    expect(preq.method).toEqual(req.method)
+    expect(preq.url).toEqual(req.url)
+    expect(preq.headers.host).toEqual('127.0.0.1' + ':' + serverInfo.port)
+  })
+
+  it('overrides the host if one is set on the incoming request', async () => {
+    expect.hasAssertions()
+    req.headers['host'] = 'A.N.OTHER'
+    const preq = server.nextRequest()
+    await subject(req, [], `http://127.0.0.1:${serverInfo.port}`)
+    expect((await preq).headers.host).toEqual(`127.0.0.1:${serverInfo.port}`)
+  })
+
+  it('rewrites the location if there is a redirection', async () => {
+    expect.hasAssertions()
+    req.headers['host'] = `127.0.0.1:${serverInfo.port}`
+    server.prependOnceListener('request', (req: IncomingMessage, res: ServerResponse) => {
+      res.statusCode = 301
+      res.setHeader('host', `localhost:${serverInfo.port}`)
+      res.setHeader('location', `http://localhost:${serverInfo.port}/potito`)
+      res.end()
     })
+    const res = await subject(req, [], `http://localhost:${serverInfo.port}`)
+    expect(res.headers['location']).toEqual(`http://127.0.0.1:${serverInfo.port}/potito`)
   })
 
   test('proxies the request body', done => {
     let body = [Buffer.from('a'), Buffer.from('b'), Buffer.from('c')]
     type onType = (buf?: any, cb?: any) => void
 
-    server.once('request', function(_req: { on: onType }) {
-      let data = []
+    server.once('request', function (_req: { on: onType }) {
+      let data: Buffer[] = []
 
-      _req.on('data', function(buf: any) {
+      _req.on('data', function (buf: Buffer) {
         data.push(buf)
       })
 
-      _req.on('end', function() {
+      _req.on('end', function () {
         expect(Buffer.concat(data)).toEqual(Buffer.concat(body))
         done()
       })
@@ -60,19 +79,13 @@ describe('proxy', () => {
 
     req.method = 'POST'
 
-    subject(req, body, `http://127.0.0.1:${serverInfo.port}`).catch(function(err: any) {
+    subject(req, body, `http://127.0.0.1:${serverInfo.port}`).catch(function (err: any) {
       done(err)
     })
   })
 
-  test('yields the response', done => {
-    subject(req, [], `http://127.0.0.1:${serverInfo.port}`)
-      .then((res: { statusCode?: number }) => {
-        expect(res.statusCode).toEqual(201)
-        done()
-      })
-      .catch(function(err: any) {
-        done(err)
-      })
+  test('yields the response', async () => {
+    const res = await subject(req, [], `http://127.0.0.1:${serverInfo.port}`)
+    expect(res.statusCode).toEqual(201)
   })
 })

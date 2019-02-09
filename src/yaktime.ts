@@ -13,6 +13,7 @@ import { HttpError } from 'restify-errors'
 import * as curl from './curl'
 import { migrateIfRequired } from './tapeMigrator'
 import { requestHasher } from './requestHasher'
+import { trackHit } from './tracker'
 
 const debug = Debug('yaktime:server')
 
@@ -28,7 +29,8 @@ const messageHash: RequestHasher = incMessH.sync
 export function yaktime (host: string, opts: YakTimeOpts): YakTimeServer {
   invariant(opts.dirname != null && opts.dirname !== '', 'You must provide opts.dirname')
 
-  return async function (req, res) {
+  const hits = new Set<string>()
+  const yaktimeTape: YakTimeServer = async function (req, res) {
     await mkdir(opts.dirname)
 
     debug('req', req.url)
@@ -41,6 +43,7 @@ export function yaktime (host: string, opts: YakTimeOpts): YakTimeServer {
     try {
       await migrateIfRequired(opts, req, body)
       const filename = await resolveModule(file).catch(recordIfNotFound(req, body, host, file, opts))
+      trackHit(filename, hits)
       const tape: YakTimeServer = require(filename)
       tape(req, res)
     } catch (err) {
@@ -49,4 +52,8 @@ export function yaktime (host: string, opts: YakTimeOpts): YakTimeServer {
       res.end(err.message)
     }
   }
+
+  yaktimeTape.hits = hits
+
+  return yaktimeTape
 }

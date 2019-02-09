@@ -20,7 +20,7 @@ export function request (res: IncomingMessage): string {
  */
 
 export function response (res: IncomingMessage): string {
-  let out = format('> HTTP/%s %s %s\n', res.httpVersion, res.statusCode, STATUS_CODES[res.statusCode || 100])
+  let out = format('> HTTP/%s %s %s\n', res.httpVersion, res.statusCode, STATUS_CODES[res.statusCode as number])
   Object.keys(res.headers).forEach(function (name) {
     out += format('> %s: %s\n', name, res.headers[name])
   })

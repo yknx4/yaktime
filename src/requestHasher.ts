@@ -15,24 +15,24 @@ export type HasherRequest = Pick<IncomingMessage, HasheableFields>
 export const requestHasher = ({ ignoredQueryFields = [], ignoredHeaders = [] }: RequestHasherOptions = {}) =>
   function requestHasher (req: HasherRequest, body: Buffer = Buffer.from('')) {
     invariant(req.url != null, 'URL is not valid')
+    const { method = '', httpVersion, headers, trailers = {} } = req
     const h = h64()
     const url = req.url as string
 
-    const parts = new URL(url, 'http://localhost')
-    const searchParams = parts.searchParams
+    const { searchParams, pathname } = new URL(url, 'http://localhost')
     ignoredQueryFields.forEach(q => searchParams.delete(q))
 
-    let query = parse(parts.searchParams.toString())
-    const headers = { ...req.headers }
+    let query = parse(searchParams.toString())
+    const newHeaders = { ...headers }
 
     ignoredHeaders.forEach(h => delete headers[h])
 
-    h.update(req.httpVersion)
-    h.update(req.method || '')
-    h.update(parts.pathname || '')
+    h.update(httpVersion)
+    h.update(method)
+    h.update(pathname)
     h.update(stableStringifier(query))
-    h.update(stableStringifier(headers))
-    h.update(stableStringifier(req.trailers))
+    h.update(stableStringifier(newHeaders))
+    h.update(stableStringifier(trailers))
     h.update(body)
 
     return h.digest().toString(16)

@@ -31,31 +31,26 @@ export function proxy (res: http.IncomingMessage, body: Buffer[], host: string):
   invariant(res.method != null, 'HTTP Method has to be defined')
   debug(`${res.method} ${res.url}`)
   return new Promise(function (resolve) {
-    let uri = url.parse(host)
-    let mod = mods[uri.protocol as keyof typeof mods] || http
-    let preq = mod.request(
-      {
-        hostname: uri.hostname,
-        port: uri.port,
-        method: res.method,
-        path: res.url,
-        headers: res.headers,
-
-        servername: uri.hostname,
-        rejectUnauthorized: false
-      },
-      function (pres) {
-        const statusCode = pres.statusCode || 0
-        if (statusCode >= 300 && statusCode < 400) {
-          const location = pres.headers['location'] || ''
-          debug('redirect', 'rewriting', location)
-          pres.headers['location'] = location.replace(uri.host || '', res.headers['host'] || '')
-        }
-        resolve(pres as YakTimeIncomingMessage)
+    const uri = url.parse(host)
+    const mod = mods[uri.protocol as keyof typeof mods] || http
+    const request = {
+      hostname: uri.hostname,
+      port: uri.port,
+      method: res.method,
+      path: res.url,
+      headers: { ...res.headers, host: uri.host },
+      servername: uri.hostname,
+      rejectUnauthorized: false
+    }
+    const preq = mod.request(request, function (pres) {
+      const statusCode = pres.statusCode
+      if (statusCode != null && statusCode >= 300 && statusCode < 400) {
+        const location = pres.headers['location'] as string
+        debug('redirect', 'rewriting', uri.host, '=>', res.headers['host'])
+        pres.headers['location'] = location.replace(uri.host as string, res.headers['host'] as string)
       }
-    )
-
-    preq.setHeader('Host', uri.host || '')
+      resolve(pres as YakTimeIncomingMessage)
+    })
 
     debug('req', res.url, 'host', uri.host)
 

@@ -10,6 +10,7 @@ import * as url from 'url'
 import { AddressInfo } from 'net'
 import { TestServer, createServer } from './test/helpers/server'
 import { Dir, createTmpdir } from './test/helpers/tmpdir'
+import { RequestHasher } from './util'
 
 const fixedUA = 'node-superagent/0.21.0'
 
@@ -19,12 +20,12 @@ describe('yakbak', () => {
   let tmpdir: Dir
 
   beforeEach(async () => {
-    server = await createServer(null)
+    server = await createServer()
     serverInfo = server.address() as AddressInfo
   })
 
   afterEach(async () => {
-    await server.teardown(null)
+    await server.closeAsync()
   })
 
   beforeEach(async () => {
@@ -72,19 +73,18 @@ describe('yakbak', () => {
 
       describe('when given a custom hashing function', () => {
         beforeEach(() => {
-          yakbak = subject(`http://localhost:${serverInfo.port}`, { dirname: tmpdir.dirname, hash: customHash })
-
           // customHash creates a MD5 of the request, ignoring its querystring, headers, etc.
-          function customHash(req, body) {
+          const customHash: RequestHasher = function customHash(req, body) {
             let hash = crypto.createHash('md5')
-            let parts = url.parse(req.url, true)
+            let parts = url.parse(req.url as string, true)
 
-            hash.update(req.method)
-            hash.update(parts.pathname)
+            hash.update(req.method as string)
+            hash.update(parts.pathname as string)
             hash.write(body)
 
             return hash.digest('hex')
           }
+          yakbak = subject(`http://localhost:${serverInfo.port}`, { dirname: tmpdir.dirname, hash: customHash })
         })
 
         test('uses the custom hash to create the tape name', done => {
@@ -145,15 +145,15 @@ describe('yakbak', () => {
 
     describe('when onlySuccessResponse is enabled', () => {
       let yakbak: any
-      beforeEach(done => {
+      beforeEach(async () => {
         /* tear down the server created in global scope as we
          need different server object which can send response with failed status code*/
-        server.teardown(done)
+        await server.closeAsync()
       })
 
-      beforeEach(done => {
+      beforeEach(async () => {
         /* Send the failed response for the requests this server handles */
-        server = createServer(done, true)
+        server = await createServer(true)
         serverInfo = server.address() as AddressInfo
       })
 
