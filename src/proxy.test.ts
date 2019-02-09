@@ -13,12 +13,12 @@ describe('proxy', () => {
   let req: IncomingMessage
 
   beforeEach(async () => {
-    server = await createServer(null)
+    server = await createServer()
     serverInfo = server.address() as AddressInfo
   })
 
   afterEach(async () => {
-    await server.teardown(null)
+    await server.closeAsync()
   })
 
   beforeEach(() => {

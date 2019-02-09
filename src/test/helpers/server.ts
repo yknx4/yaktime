@@ -7,22 +7,19 @@ import * as http from 'http'
 import Debug from 'debug'
 import { AddressInfo } from 'net'
 import { YakTimeServer } from '../../util'
+import { createAsyncServer, AsyncServer } from '../../AsyncServer'
 
 const debug = Debug('yaktime:test-server')
 
-export interface TestServer extends http.Server {
+export interface TestServer extends AsyncServer {
   requests: http.IncomingMessage[]
-  teardown: (cb: (() => {}) | null) => Promise<void> | undefined
 }
 
 /**
  * Creates a test HTTP server.
- * @param {Function} done
- * @param {boolean} failRequest - Specifies whether response has to be error or not
- * @returns {http.Server}
  */
 
-export function createServer (cb: ((e: Error) => void) | null, failRequest = false, handler?: YakTimeServer): Promise<TestServer> | TestServer {
+export async function createServer (failRequest = false, handler?: YakTimeServer): Promise<TestServer> {
   const requests: http.IncomingMessage[] = []
 
   let defaultHandler: YakTimeServer = (req, res) => {
@@ -44,35 +41,17 @@ export function createServer (cb: ((e: Error) => void) | null, failRequest = fal
     h(req, res)
   }
 
-  let server = http.createServer(wrapper) as TestServer
+  let server = createAsyncServer(wrapper) as TestServer
 
   server.requests = requests
 
-  server.teardown = function (done) {
-    const port = (server.address() as AddressInfo).port
-    debug(`Closing on ${port}`)
-    if (done == null) {
-      return new Promise(resolve => {
-        this.close(resolve)
-      })
-    }
-    this.close(done)
-    return
-  }
+  await server.listenAsync()
+  const port = (server.address() as AddressInfo).port
+  debug(`Listening on ${port}`)
 
-  if (cb == null) {
-    return new Promise((resolve, reject) => {
-      server.listen((e: any) => {
-        const port = (server.address() as AddressInfo).port
-        debug(`Listening on ${port}`)
-        e != null ? reject(e) : resolve(server)
-      })
-    })
-  }
-
-  return server.listen((e: any) => {
-    const port = (server.address() as AddressInfo).port
-    debug(`Listening on ${port}`)
-    cb(e)
+  server.once('close', () => {
+    debug(`Closed on ${port}`)
   })
+
+  return server
 }

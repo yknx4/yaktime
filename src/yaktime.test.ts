@@ -19,12 +19,12 @@ describe('yakbak', () => {
   let tmpdir: Dir
 
   beforeEach(async () => {
-    server = await createServer(null)
+    server = await createServer()
     serverInfo = server.address() as AddressInfo
   })
 
   afterEach(async () => {
-    await server.teardown(null)
+    await server.closeAsync()
   })
 
   beforeEach(async () => {
@@ -145,15 +145,15 @@ describe('yakbak', () => {
 
     describe('when onlySuccessResponse is enabled', () => {
       let yakbak: any
-      beforeEach(done => {
+      beforeEach(async () => {
         /* tear down the server created in global scope as we
          need different server object which can send response with failed status code*/
-        server.teardown(done)
+        await server.closeAsync()
       })
 
-      beforeEach(done => {
+      beforeEach(async () => {
         /* Send the failed response for the requests this server handles */
-        server = createServer(done, true)
+        server = await createServer(true)
         serverInfo = server.address() as AddressInfo
       })
 

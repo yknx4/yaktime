@@ -5,7 +5,7 @@ import { IncomingMessage } from 'http'
 import { existsSync } from 'fs'
 import { requestHasher } from './requestHasher'
 
-const debug = Debug('yaktime:migrator')
+const debug = Debug('yaktime:tape-migrator')
 
 const incMessH = require('incoming-message-hash')
 const oldHasher: RequestHasher = incMessH.sync
