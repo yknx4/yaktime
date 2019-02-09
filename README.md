@@ -1,8 +1,8 @@
 # yaktime
 
-![](https://img.shields.io/npm/v/yaktime.svg?style=flat)
-[![Build Status](https://travis-ci.org/yknx4/yaktime.svg?branch=master)](https://travis-ci.org/yknx4/yaktime)
-![](https://img.shields.io/npm/dt/yaktime.svg?style=flat)
+[![NPM Packagke](https://img.shields.io/npm/v/yaktime.svg?style=flat)](https://www.npmjs.com/package/yaktime)
+[![Build Status](https://img.shields.io/travis/com/yknx4/yaktime.svg?style=flat)](https://travis-ci.com/yknx4/yaktime)
+[![NPM Downloads](https://img.shields.io/npm/dt/yaktime.svg?style=flat)](https://www.npmjs.com/package/yaktime)
 ![](https://img.shields.io/david/yknx4/yaktime.svg?style=flat)
 ![](https://img.shields.io/codecov/c/github/yknx4/yaktime.svg?style=flat)
 [![DeepScan grade](https://deepscan.io/api/teams/2882/projects/4319/branches/35118/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=2882&pid=4319&bid=35118)
