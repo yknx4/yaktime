@@ -5,7 +5,7 @@
 import { proxy as subject } from './proxy'
 import { createServer, TestServer } from './test/helpers/server'
 import { IncomingMessage } from 'http'
-import { AddressInfo } from 'net'
+import { AddressInfo, Socket } from 'net'
 
 describe('proxy', () => {
   let server: TestServer
@@ -22,7 +22,7 @@ describe('proxy', () => {
   })
 
   beforeEach(() => {
-    req = new IncomingMessage(null)
+    req = new IncomingMessage((null as unknown) as Socket)
     req.method = 'GET'
     req.url = '/'
     req.headers['connection'] = 'close'
@@ -59,9 +59,9 @@ describe('proxy', () => {
     type onType = (buf?: any, cb?: any) => void
 
     server.once('request', function(_req: { on: onType }) {
-      let data = []
+      let data: Buffer[] = []
 
-      _req.on('data', function(buf: any) {
+      _req.on('data', function(buf: Buffer) {
         data.push(buf)
       })
 
