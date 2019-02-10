@@ -57,8 +57,8 @@ export async function buildTape (req: ClientRequest, res: IncomingMessage) {
   const requestHeaders = joinIndented(map(req.getHeaders(), (value, header) => `${header}: ${escapeComments((value || '').toString())}`), {
     indent: ' * '
   })
-  const responseHeaders = joinIndented(map(res.headers, (value, header) => `res.setHeader('${header}', '${value}')`))
-  const bodyText = joinIndented(body.map(data => `res.write(Buffer.from('${data.toString(encoding)}', '${encoding}'))`))
+  const responseHeaders = joinIndented(map(res.headers, (value, header) => `res.setHeader('${header}', ${JSON.stringify(value)})`))
+  const bodyText = joinIndented(body.map(data => `res.write(Buffer.from(${JSON.stringify(data.toString(encoding))}, '${encoding}'))`))
 
   return `const { basename } = require('path')
 
