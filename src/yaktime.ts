@@ -21,7 +21,7 @@ const incMessH = require('incoming-message-hash')
 const messageHash: RequestHasher = incMessH.sync
 
 /**
- * Returns a new yaktime proxy middleware.
+ * Returns a function of the signature function (req, res) that you can give to an `http.Server` as its handler.
  * @param - host The hostname to proxy to
  * @param - opts
  */

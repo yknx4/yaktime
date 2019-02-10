@@ -4,7 +4,9 @@ import { EventEmitter } from 'events'
 
 const linter = require('standard')
 
-const isStandardJs = (js: string) => linter.lintTextSync(js, {}).errorCount === 0
+// We will have quotes error on the standard
+const isStandardJs = (js: string) => linter.lintTextSync(js, {}).results.every(r => r.messages[0].ruleId === 'quotes')
+
 const req: unknown = {
   method: 'GET',
   path: '/about?foo=bar',
@@ -32,7 +34,8 @@ describe('buildTape', () => {
 
     const res: unknown = getRes(body, {
       'content-type': 'image/gif',
-      'content-encoding': 'gzip'
+      'content-encoding': 'gzip',
+      foo: 'bar\'bar"bar`bar'
     })
 
     const tape = buildTape(req as ClientRequest, res as IncomingMessage)
@@ -56,13 +59,14 @@ describe('buildTape', () => {
 module.exports = function (req, res) {
   res.statusCode = 200
 
-  res.setHeader('content-type', 'image/gif')
-  res.setHeader('content-encoding', 'gzip')
+  res.setHeader('content-type', "image/gif")
+  res.setHeader('content-encoding', "gzip")
+  res.setHeader('foo', "bar'bar\\"bar\`bar")
 
   res.setHeader('x-yakbak-tape', basename(__filename, '.js'))
 
-  res.write(Buffer.from('Q0hPTg==', 'base64'))
-  res.write(Buffer.from('TUFHVUU=', 'base64'))
+  res.write(Buffer.from("Q0hPTg==", 'base64'))
+  res.write(Buffer.from("TUFHVUU=", 'base64'))
   res.end()
 
   return __filename
@@ -76,12 +80,13 @@ module.exports = function (req, res) {
 
     const res: unknown = getRes(body, {
       'content-type': 'text/html',
-      'content-encoding': 'identity'
+      'content-encoding': 'identity',
+      foo: 'bar\'bar"bar`bar'
     })
 
     const tape = buildTape(req as ClientRequest, res as IncomingMessage)
     body.emit('data', Buffer.from('YAK'))
-    body.emit('data', Buffer.from('TIME'))
+    body.emit('data', Buffer.from('\'"`TIME'))
     body.emit('end')
 
     expect(await tape).toEqual(`const { basename } = require('path')
@@ -101,13 +106,14 @@ module.exports = function (req, res) {
 module.exports = function (req, res) {
   res.statusCode = 200
 
-  res.setHeader('content-type', 'text/html')
-  res.setHeader('content-encoding', 'identity')
+  res.setHeader('content-type', "text/html")
+  res.setHeader('content-encoding', "identity")
+  res.setHeader('foo', "bar'bar\\"bar\`bar")
 
   res.setHeader('x-yakbak-tape', basename(__filename, '.js'))
 
-  res.write(Buffer.from('YAK', 'utf8'))
-  res.write(Buffer.from('TIME', 'utf8'))
+  res.write(Buffer.from("YAK", 'utf8'))
+  res.write(Buffer.from("'\\"\`TIME", 'utf8'))
   res.end()
 
   return __filename

@@ -19,6 +19,7 @@ Record HTTP interactions The Node Way™. Inspired by ruby's [vcr][1].
 
 ```bash
 $ npm install yaktime --save-dev
+$ yarn add --dev yaktime
 ```
 
 ## usage
