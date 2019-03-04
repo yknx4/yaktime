@@ -16,7 +16,7 @@ const debug = Debug('yaktime:proxy')
 
 const mods = { 'http:': http, 'https:': https }
 
-interface YakTimeIncomingMessage extends http.IncomingMessage {
+export interface YakTimeIncomingMessage extends http.IncomingMessage {
   req: http.ClientRequest
 }
 

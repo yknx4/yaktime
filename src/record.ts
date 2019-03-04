@@ -9,6 +9,8 @@ import { writeFileAsync, ensureIsModuleNotFoundError, ensureRecordingIsAllowed, 
 import { ModuleNotFoundError } from './errors'
 import { proxy } from './proxy'
 import * as curl from './curl'
+import { recordTape } from './tapeV2'
+import { Recorder } from './Recorder'
 
 const debug = Debug('yaktime:record')
 

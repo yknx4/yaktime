@@ -8,12 +8,13 @@ import * as path from 'path'
 import Debug from 'debug'
 import { buffer } from './buffer'
 import { recordIfNotFound } from './record'
-import { mkdir, RequestHasher, YakTimeOpts, YakTimeServer, tapename, resolveModule } from './util'
+import { mkdir, RequestHasher, YakTimeOpts, YakTimeServer, tapename, resolveModule as resolveCassete, ensureRecordingIsAllowed } from './util'
 import { HttpError } from 'restify-errors'
 import * as curl from './curl'
 import { migrateIfRequired } from './tapeMigrator'
 import { requestHasher } from './requestHasher'
 import { trackHit } from './tracker'
+import { Recorder } from './Recorder'
 
 const debug = Debug('yaktime:server')
 
@@ -26,6 +27,7 @@ const messageHash: RequestHasher = incMessH.sync
  * @param - opts
  */
 
+// tslint:disable-next-line:cognitive-complexity
 export function yaktime (host: string, opts: YakTimeOpts): YakTimeServer {
   invariant(opts.dirname != null && opts.dirname !== '', 'You must provide opts.dirname')
 
@@ -42,10 +44,23 @@ export function yaktime (host: string, opts: YakTimeOpts): YakTimeServer {
 
     try {
       await migrateIfRequired(opts, req, body)
-      const filename = await resolveModule(file).catch(recordIfNotFound(req, body, host, file, opts))
-      trackHit(filename, hits)
-      const tape: YakTimeServer = require(filename)
-      tape(req, res)
+
+      if (opts.useDb === true) {
+        const filename = await resolveCassete(file).catch(recordIfNotFound(req, body, host, file, opts))
+
+        trackHit(filename, hits)
+        const tape: YakTimeServer = require(filename)
+        tape(req, res)
+      } else {
+        const recorder = new Recorder(opts, host)
+        const existingResponse = await recorder.read(req, body)
+        if (existingResponse != null) {
+          await recorder.respond(existingResponse.response, res)
+        } else {
+          const response = await recorder.record(req, body, host, opts)
+          await recorder.respond(response.response, res)
+        }
+      }
     } catch (err) {
       res.statusCode = err instanceof HttpError ? err.statusCode : 500
       debug(err.message)

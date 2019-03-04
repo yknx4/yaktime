@@ -61,6 +61,11 @@ export interface YakTimeOpts {
    * this are only used when `opts.hash` is null
    */
   hasherOptions?: RequestHasherOptions
+  /**
+   * Whether to use a built-in database instead of JS files.
+   * To avoid issues with hashers
+   */
+  useDb?: boolean
 }
 
 export interface YakTimeServer {
