@@ -2,13 +2,15 @@ import { YakTimeOpts, ensureRecordingIsAllowed, ensureIsValidStatusCode } from '
 import Loki from 'lokijs'
 import { getDB } from './db'
 import Debug from 'debug'
-import { IncomingMessage, ServerResponse } from 'http'
+import { IncomingMessage, ServerResponse, IncomingHttpHeaders } from 'http'
 import { URL } from 'url'
 import { h64 } from 'xxhashjs'
 import { parse } from 'querystring'
 import { buffer } from './buffer'
-import { YakTimeIncomingMessage, proxy } from './proxy'
+import { proxy } from './proxy'
 import * as curl from './curl'
+import { isMatch } from 'lodash'
+
 const debug = Debug('yaktime:recorder')
 
 type Unpacked<T> = T extends (infer U)[] ? U : T extends (...args: any[]) => infer U ? U : T extends Promise<infer U> ? U : T
@@ -67,6 +69,7 @@ export class Recorder {
   async respond (storedRes: SerializedResponse, res: ServerResponse) {
     res.statusCode = storedRes.statusCode
     res.writeHead(storedRes.statusCode, storedRes.headers)
+    res.setHeader('X-Yakbak-Tape', '')
     res.addTrailers(storedRes.trailers || {})
     res.end(Buffer.from(storedRes.body, 'base64'))
   }
@@ -85,7 +88,7 @@ export class Recorder {
 
   async save (request: SerializedRequest, response: SerializedResponse) {
     const db = await this.db
-    const tapes = db.addCollection<FullSerializedRequest>('tapes')
+    const tapes = db.addCollection<FullSerializedRequest>('tapes', { disableMeta: true })
     return tapes.add({ ...request, response })
   }
 
@@ -97,7 +100,7 @@ export class Recorder {
   async load (request: SerializedRequest): Promise<FullSerializedRequest | null> {
     const { ignoredQueryFields = [], ignoredHeaders = [] } = this.opts.hasherOptions || {}
     const db = await this.db
-    const tapes = db.addCollection<FullSerializedRequest>('tapes')
+    const tapes = db.addCollection<FullSerializedRequest>('tapes', { disableMeta: true })
 
     const { query: _query, headers: _headers } = request
 
@@ -119,6 +122,30 @@ export class Recorder {
 
     delete query.body
 
-    return tapes.findOne(lokiQuery)
+    return tapes.where(obj => isMatch(obj, lokiQuery))[0]
+  }
+}
+
+export class DbMigrator {
+  data: Buffer[] = []
+  headers: IncomingHttpHeaders = {}
+  statusCode = 200
+  setHeader (name: string, value: string) {
+    this.headers[name] = value
+  }
+  write (input: Buffer) {
+    this.data.push(input)
+  }
+
+  // tslint:disable-next-line:no-empty
+  end () {}
+
+  toSerializedResponse (): SerializedResponse {
+    return {
+      statusCode: this.statusCode,
+      headers: this.headers,
+      body: Buffer.from(this.data).toString('base64'),
+      trailers: {}
+    }
   }
 }

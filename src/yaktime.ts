@@ -43,9 +43,9 @@ export function yaktime (host: string, opts: YakTimeOpts): YakTimeServer {
     const file = path.join(opts.dirname, tapename(opts.hash || defaultHasher, req, body))
 
     try {
-      await migrateIfRequired(opts, req, body)
+      await migrateIfRequired(host, opts, req, body)
 
-      if (opts.useDb === true) {
+      if (opts.useDb !== true) {
         const filename = await resolveCassete(file).catch(recordIfNotFound(req, body, host, file, opts))
 
         trackHit(filename, hits)
@@ -63,7 +63,7 @@ export function yaktime (host: string, opts: YakTimeOpts): YakTimeServer {
       }
     } catch (err) {
       res.statusCode = err instanceof HttpError ? err.statusCode : 500
-      debug(err.message)
+      debug(err.stack)
       res.end(err.message)
     }
   }

@@ -9,11 +9,12 @@ import * as path from 'path'
 import { createServer, TestServer } from './test/helpers/server'
 import { createTmpdir, Dir } from './test/helpers/tmpdir'
 import { AddressInfo } from 'net'
-import { tapename, RequestHasher } from './util'
+import { tapename, RequestHasher, YakTimeOpts } from './util'
 import { requestHasher } from './requestHasher'
-import { tapeMigrator } from './tapeMigrator'
+import { fileTapeMigrator, dbTapeMigrator } from './tapeMigrator'
 import { yaktime } from './yaktime'
 import { notifyNotUsedTapes } from './tracker'
+import { Recorder } from './Recorder'
 
 const incMessH = require('incoming-message-hash')
 const messageHash: RequestHasher = incMessH.sync
@@ -57,16 +58,43 @@ describe('record', () => {
   test('copies the file with the new name', done => {
     expect.hasAssertions()
 
-    req.once('response', async function() {
+    req.once('response', async function () {
       const serverReq = proxyServer.requests[0]
       const newHash = requestHasher({})
       const oldFileName = path.join(tmpdir.dirname, tapename(messageHash, serverReq))
       const newFileName = path.join(tmpdir.dirname, tapename(newHash, serverReq))
       expect(fs.existsSync(oldFileName)).toEqual(true)
       expect(fs.existsSync(newFileName)).toEqual(false)
-      await tapeMigrator(newHash, { dirname: tmpdir.dirname })(serverReq)
+      await fileTapeMigrator(newHash, { dirname: tmpdir.dirname })(serverReq)
       expect(fs.existsSync(oldFileName)).toEqual(true)
       expect(fs.existsSync(newFileName)).toEqual(true)
+      done()
+    })
+
+    req.end()
+  })
+
+  test('add existing request to the db', done => {
+    expect.hasAssertions()
+
+    req.once('response', async function () {
+      const migrator = new Recorder({ dirname: tmpdir.dirname, useDb: true } as YakTimeOpts, `http://localhost:${serverInfo.port}`)
+      const serverReq = proxyServer.requests[0]
+      const oldFileName = path.join(tmpdir.dirname, tapename(messageHash, serverReq))
+      expect(fs.existsSync(oldFileName)).toEqual(true)
+      expect(await migrator.read(serverReq, [])).toBeUndefined()
+      await dbTapeMigrator(`http://localhost:${serverInfo.port}`, { dirname: tmpdir.dirname, useDb: true })(serverReq)
+      expect(fs.existsSync(oldFileName)).toEqual(true)
+      expect(await migrator.read(serverReq, [])).toEqual(
+        expect.objectContaining({
+          method: 'GET',
+          path: '/',
+          response: expect.objectContaining({
+            statusCode: 201,
+            body: 'AA=='
+          })
+        })
+      )
       done()
     })
 
