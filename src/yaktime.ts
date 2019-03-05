@@ -43,19 +43,6 @@ export function yaktime (host: string, opts: YakTimeOpts): YakTimeServer {
   }
 
   yaktimeTape.hits = hits
-  yaktimeTape.close = async () => {
-    const db = await recorder.db
 
-    await new Promise(resolve => {
-      db.close(resolve)
-    })
-    await new Promise(resolve => {
-      db.saveDatabase(resolve)
-    })
-
-    return new Promise(resolve => {
-      recorder.proxy.close(resolve)
-    })
-  }
   return yaktimeTape
 }
