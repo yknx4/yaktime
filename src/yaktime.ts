@@ -7,7 +7,6 @@ import invariant from 'invariant'
 import Debug from 'debug'
 import { buffer } from './buffer'
 import { mkdir, YakTimeOpts, YakTimeServer } from './util'
-import { HttpError } from 'restify-errors'
 import * as curl from './curl'
 import { Recorder } from './Recorder'
 

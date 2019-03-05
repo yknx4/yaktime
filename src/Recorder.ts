@@ -2,7 +2,7 @@ import { YakTimeOpts, ensureRecordingIsAllowed, ensureIsValidStatusCode } from '
 import Loki from 'lokijs'
 import { getDB } from './db'
 import Debug from 'debug'
-import { IncomingMessage, ServerResponse, IncomingHttpHeaders } from 'http'
+import { IncomingMessage, ServerResponse } from 'http'
 import { URL } from 'url'
 import { h64 } from 'xxhashjs'
 import { parse } from 'querystring'
@@ -16,8 +16,8 @@ const debug = Debug('yaktime:recorder')
 
 type Unpacked<T> = T extends (infer U)[] ? U : T extends (...args: any[]) => infer U ? U : T extends Promise<infer U> ? U : T
 
-type SerializedRequest = ReturnType<Recorder['serializeRequest']>
-type SerializedResponse = Unpacked<ReturnType<Recorder['serializeResponse']>>
+export type SerializedRequest = ReturnType<Recorder['serializeRequest']>
+export type SerializedResponse = Unpacked<ReturnType<Recorder['serializeResponse']>>
 interface FullSerializedRequest extends SerializedRequest {
   $loki?: number
   response: SerializedResponse
@@ -85,9 +85,9 @@ export class Recorder {
     const request = this.serializeRequest(req, body)
 
     const proxyRes: IncomingMessage = await new Promise((resolve, reject) => {
-      this.proxy.once('proxyRes', async (proxyRes: IncomingMessage) => {
+      this.proxy.once('proxyRes', ((async (proxyRes: IncomingMessage) => {
         resolve(proxyRes)
-      })
+      }) as unknown) as (() => void))
       this.proxy.once('error', reject)
       this.proxy.web(req, res, { selfHandleResponse: true })
     })

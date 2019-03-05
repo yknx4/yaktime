@@ -36,10 +36,6 @@ export interface YakTimeOpts {
    */
   recordOnlySuccess?: boolean
   /**
-   * Function that returns hash of a request
-   */
-  hash?: RequestHasher
-  /**
    * Function that returns hash of existing requests
    * this will be use to migrate from old requests to newer
    */
@@ -49,11 +45,6 @@ export interface YakTimeOpts {
    * old files will not be deleted, if `opts.hash` is defined, this will be ignored
    */
   migrate?: boolean
-  /**
-   * Whether to use a built-in database instead of JS files.
-   * To avoid issues with hashers
-   */
-  useDb?: boolean
 }
 
 export interface YakTimeServer {

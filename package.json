@@ -62,7 +62,8 @@
   },
   "bin": {
     "yakbak": "lib/cli.js",
-    "yaktime": "lib/cli.js"
+    "yaktime": "lib/cli.js",
+    "migrate-yaktime": "lib/migrate.js"
   },
   "author": {
     "name": "Ale Figueroa",
