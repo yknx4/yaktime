@@ -35,7 +35,7 @@ export class Recorder {
     const fullUrl = new URL(req.url as string, this.host)
     const { method = '', httpVersion, headers, trailers } = req
 
-    const bodyBuffer = Buffer.from(body)
+    const bodyBuffer = Buffer.concat(body)
     const bodyEncoded = bodyBuffer.toString('base64')
     const bodyHash = h64(bodyBuffer, 0).toString(16)
 
@@ -55,7 +55,7 @@ export class Recorder {
   async serializeResponse (res: IncomingMessage) {
     const statusCode = res.statusCode || 200
     const headers = res.headers
-    const body = Buffer.from(await buffer<Buffer>(res)).toString('base64')
+    const body = Buffer.concat(await buffer<Buffer>(res)).toString('base64')
     const trailers = res.trailers
 
     return {

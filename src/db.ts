@@ -9,7 +9,7 @@ export async function getDB (opts: YakTimeOpts) {
   if (db == null) {
     const dbPath = path.join(opts.dirname, 'tapes.json')
     debug(`Opening db on ${dbPath}`)
-    db = new Loki(dbPath, { autoload: true, autosave: process.env.NODE_ENV !== 'test' })
+    db = new Loki(dbPath, { autoload: true, autosave: true })
   }
   return db
 }
