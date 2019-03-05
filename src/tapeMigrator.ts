@@ -34,9 +34,6 @@ export const fileTapeMigrator = (newHasher: RequestHasher, opts: Pick<YakTimeOpt
 
 export const dbTapeMigrator = (host: string, opts: YakTimeOpts) =>
   async function tapeMigrator (req: IncomingMessage, body: Buffer[] = []) {
-    if (opts.useDb !== true) {
-      return
-    }
     const recorder = new Recorder(opts, host)
     const oldFileName = path.join(opts.dirname, tapename(opts.oldHash || oldHasher, req, body))
     const oldExists = existsSync(oldFileName)
