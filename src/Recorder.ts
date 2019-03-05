@@ -103,7 +103,9 @@ export class Recorder {
   async save (request: SerializedRequest, response: SerializedResponse) {
     const db = await this.db
     const tapes = db.addCollection<FullSerializedRequest>('tapes', { disableMeta: true })
-    return tapes.add({ ...request, response })
+    const tape = tapes.add({ ...request, response })
+    db.saveDatabase()
+    return tape
   }
 
   async read (req: IncomingMessage, body: Buffer) {
