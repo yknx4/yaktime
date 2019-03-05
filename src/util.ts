@@ -50,6 +50,7 @@ export interface YakTimeOpts {
 export interface YakTimeServer {
   (request: IncomingMessage, response: ServerResponse): void
   hits?: Set<string>
+  close? (): Promise<void>
 }
 
 export function ensureIsValidStatusCode (res: IncomingMessage, opts: YakTimeOpts) {
