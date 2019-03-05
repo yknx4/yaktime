@@ -10,7 +10,7 @@ import { ModuleNotFoundError } from './errors'
 import { proxy } from './proxy'
 import * as curl from './curl'
 
-const debug = Debug('yaktime:record')
+const debug = Debug('yaktime:legacy-record')
 
 /**
  * Write `data` to `filename`.

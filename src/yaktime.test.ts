@@ -1,3 +1,4 @@
+// tslint:disable:no-duplicate-string
 // Copyright 2016 Yahoo Inc.
 // Copyright 2019 Ale Figueroa
 // Licensed under the terms of the MIT license. Please see LICENSE file in the project root for terms.
@@ -14,6 +15,7 @@ import { RequestHasher } from './util'
 
 const fixedUA = 'node-superagent/0.21.0'
 
+// tslint:disable-next-line:no-big-function
 describe('yakbak', () => {
   let server: TestServer
   let serverInfo: AddressInfo
@@ -51,7 +53,7 @@ describe('yakbak', () => {
           .expect('X-Yakbak-Tape', '1a574e91da6cf00ac18bc97abaed139e')
           .expect('Content-Type', 'text/html')
           .expect(201, 'OK')
-          .end(function(err) {
+          .end(function (err) {
             expect(server.requests.length).toEqual(1)
             done(err)
           })
@@ -65,7 +67,7 @@ describe('yakbak', () => {
           .expect('X-Yakbak-Tape', '3234ee470c8605a1837e08f218494326')
           .expect('Content-Type', 'text/html')
           .expect(201, 'OK')
-          .end(function(err) {
+          .end(function (err) {
             expect(fs.existsSync(tmpdir.join('3234ee470c8605a1837e08f218494326.js'))).toBeTruthy()
             done(err)
           })
@@ -74,7 +76,7 @@ describe('yakbak', () => {
       describe('when given a custom hashing function', () => {
         beforeEach(() => {
           // customHash creates a MD5 of the request, ignoring its querystring, headers, etc.
-          const customHash: RequestHasher = function customHash(req, body) {
+          const customHash: RequestHasher = function customHash (req, body) {
             let hash = crypto.createHash('md5')
             let parts = url.parse(req.url as string, true)
 
@@ -97,7 +99,7 @@ describe('yakbak', () => {
             .expect('X-Yakbak-Tape', '3f142e515cb24d1af9e51e6869bf666f')
             .expect('Content-Type', 'text/html')
             .expect(201, 'OK')
-            .end(function(err) {
+            .end(function (err) {
               expect(fs.existsSync(tmpdir.join('3f142e515cb24d1af9e51e6869bf666f.js'))).toBeTruthy()
               done(err)
             })
@@ -125,7 +127,7 @@ describe('yakbak', () => {
           .get('/record/2')
           .set('user-agent', fixedUA)
           .set('host', 'localhost:3001')
-          .end(function(err) {
+          .end(function (err) {
             expect(server.requests.length).toEqual(0)
             done(err)
           })
@@ -136,7 +138,7 @@ describe('yakbak', () => {
           .get('/record/2')
           .set('user-agent', fixedUA)
           .set('host', 'localhost:3001')
-          .end(function(err) {
+          .end(function (err) {
             expect(!fs.existsSync(tmpdir.join('3234ee470c8605a1837e08f218494326.js'))).toBeTruthy()
             done(err)
           })
@@ -167,7 +169,7 @@ describe('yakbak', () => {
           .set('user-agent', fixedUA)
           .set('host', 'localhost:3001')
           .expect(404)
-          .end(function(err) {
+          .end(function (err) {
             expect(!fs.existsSync(tmpdir.join('3234ee470c8605a1837e08f218494326.js'))).toBeTruthy()
             done(err)
           })
@@ -177,8 +179,12 @@ describe('yakbak', () => {
 
   describe('playback', () => {
     let yakbak: any
-    beforeEach(() => {
+    let yakbakWithDb: any
+    beforeEach(async () => {
+      await tmpdir.teardown()
+      await tmpdir.setup()
       yakbak = subject(`http://localhost:${serverInfo.port}`, { dirname: tmpdir.dirname })
+      yakbakWithDb = subject(`http://localhost:${serverInfo.port}`, { dirname: tmpdir.dirname, useDb: true, migrate: true })
     })
 
     beforeEach(done => {
@@ -197,18 +203,22 @@ describe('yakbak', () => {
       fs.writeFile(tmpdir.join(file), tape, done)
     })
 
-    test('does not make a request to the server', done => {
-      request(yakbak)
+    const test1 = (yak: any, done: any) =>
+      request(yak)
         .get('/playback/1')
         .set('user-agent', fixedUA)
         .set('host', 'localhost:3001')
         .expect('X-Yakbak-Tape', '305c77b0a3ad7632e51c717408d8be0f')
         .expect('Content-Type', 'text/html')
         .expect(201, 'YAY')
-        .end(function(err) {
+        .end(function (err) {
           expect(server.requests.length).toEqual(0)
           done(err)
         })
+
+    test('does not make a request to the server', done => {
+      test1(yakbak, done)
+      test1(yakbakWithDb, done)
     })
   })
 })

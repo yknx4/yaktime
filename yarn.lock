@@ -805,6 +805,11 @@
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.120.tgz#cf265d06f6c7a710db087ed07523ab8c1a24047b"
   integrity sha512-jQ21kQ120mo+IrDs1nFNVm/AsdFxIx2+vZ347DbogHJPd/JzKNMOqU6HCYin1W6v8l5R9XSO2/e9cxmn7HAnVw==
 
+"@types/lokijs@^1.5.2":
+  version "1.5.2"
+  resolved "https://registry.yarnpkg.com/@types/lokijs/-/lokijs-1.5.2.tgz#ed228f080033ce1fb16eff4acde65cb9ae0f1bf2"
+  integrity sha512-ZF14v1P1Bjbw8VJRu+p4WS9V926CAOjWF4yq23QmSBWRPe0/GXlUKzSxjP1fi/xi8nrq6zr9ECo8Z/8KsRqroQ==
+
 "@types/minimatch@*":
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/@types/minimatch/-/minimatch-3.0.3.tgz#3dca0e3f33b200fc7d1139c0cd96c1268cadfd9d"
@@ -4274,6 +4279,11 @@ log-update@^2.3.0:
     ansi-escapes "^3.0.0"
     cli-cursor "^2.0.0"
     wrap-ansi "^3.0.1"
+
+lokijs@^1.5.6:
+  version "1.5.6"
+  resolved "https://registry.yarnpkg.com/lokijs/-/lokijs-1.5.6.tgz#6de6b8c3ff7a972fd0104169f81e7ddc244c029f"
+  integrity sha512-xJoDXy8TASTjmXMKr4F8vvNUCu4dqlwY5gmn0g5BajGt1GM3goDCafNiGAh/sfrWgkfWu1J4OfsxWm8yrWweJA==
 
 loose-envify@^1.0.0, loose-envify@^1.3.1:
   version "1.4.0"
