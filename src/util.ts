@@ -1,10 +1,9 @@
 import { promisify } from 'util'
-import { readFile, writeFile, existsSync, copyFile, readdir } from 'fs'
+import { readFile, writeFile, copyFile, readdir } from 'fs'
 import mkdirp from 'mkdirp'
 import { IncomingMessage, ServerResponse } from 'http'
 import Debug from 'debug'
-import { ModuleNotFoundError, InvalidStatusCodeError, RecordingDisabledError } from './errors'
-import { RequestHasherOptions } from './requestHasher'
+import { InvalidStatusCodeError, RecordingDisabledError } from './errors'
 
 const debug = Debug('yaktime:util')
 
@@ -15,14 +14,6 @@ export const writeFileAsync = promisify(writeFile)
 export const copyFileAsync = promisify(copyFile)
 export const readDirAsync = promisify(readdir)
 
-/**
- * Returns the tape name for `req`.
- */
-
-export function tapename (hashFn: RequestHasher, req: IncomingMessage, body: Buffer[] = []) {
-  return hashFn(req, Buffer.concat(body)) + '.js'
-}
-
 export function isValidStatusCode (code: number = 0) {
   return code >= 200 && code < 400
 }
@@ -30,6 +21,8 @@ export function isValidStatusCode (code: number = 0) {
 export type RequestHasher = (req: IncomingMessage, body: Buffer) => string
 
 export interface YakTimeOpts {
+  ignoredQueryFields?: string[]
+  allowedHeaders?: string[]
   /**
    * The tapes directory
    */
@@ -57,11 +50,6 @@ export interface YakTimeOpts {
    */
   migrate?: boolean
   /**
-   * Options to considerate when hashing
-   * this are only used when `opts.hash` is null
-   */
-  hasherOptions?: RequestHasherOptions
-  /**
    * Whether to use a built-in database instead of JS files.
    * To avoid issues with hashers
    */
@@ -73,32 +61,10 @@ export interface YakTimeServer {
   hits?: Set<string>
 }
 
-export function resolveModule (file: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    debug(`resolve`, file)
-    let fileName = require.resolve(file)
-
-    // If tape was deleted, then throw module not found error
-    // so that it can be re-recorded instead of failing on
-    // require
-    if (!existsSync(fileName)) {
-      reject(new ModuleNotFoundError('File does not exist'))
-    }
-
-    resolve(fileName)
-  })
-}
-
 export function ensureIsValidStatusCode (res: IncomingMessage, opts: YakTimeOpts) {
   if (opts.recordOnlySuccess && !isValidStatusCode(res.statusCode)) {
     debug('failed', 'status', res.statusCode)
     throw new InvalidStatusCodeError('Only Successful responses will be recorded', res)
-  }
-}
-
-export function ensureIsModuleNotFoundError (e: ModuleNotFoundError) {
-  if (e.code !== 'MODULE_NOT_FOUND') {
-    throw e
   }
 }
 
@@ -107,20 +73,4 @@ export function ensureRecordingIsAllowed (req: IncomingMessage, opts: YakTimeOpt
     debug('no record', req.url)
     throw new RecordingDisabledError('Recording Disabled')
   }
-}
-
-export function captureAll (regex: RegExp, str: string) {
-  const result = []
-  regex.lastIndex = 0
-  let prev: RegExpExecArray | null = null
-  do {
-    prev = regex.exec(str)
-    if (prev != null) {
-      const [, ...matches] = prev
-      result.push(matches)
-    }
-  } while (prev != null)
-
-  regex.lastIndex = 0
-  return result
 }

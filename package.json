@@ -71,11 +71,13 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@types/http-proxy": "^1.16.2",
     "@types/lokijs": "^1.5.2",
     "@types/mkdirp": "^0.5.2",
     "content-type": "^1.0.4",
     "debug": "^4.1.1",
     "fast-json-stable-stringify": "^2.0.0",
+    "http-proxy": "^1.17.0",
     "incoming-message-hash": "^3.2.2",
     "invariant": "^2.2.4",
     "lodash.map": "^4.6.0",

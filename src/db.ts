@@ -5,7 +5,7 @@ import Debug from 'debug'
 
 const debug = Debug('yaktime:db')
 let db: Loki
-export async function getDB (opts: YakTimeOpts) {
+export async function getDB (opts: YakTimeOpts): Promise<Loki> {
   if (db == null) {
     const dbPath = path.join(opts.dirname, 'tapes.json')
     debug(`Opening db on ${dbPath}`)

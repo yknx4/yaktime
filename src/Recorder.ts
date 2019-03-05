@@ -6,10 +6,11 @@ import { IncomingMessage, ServerResponse, IncomingHttpHeaders } from 'http'
 import { URL } from 'url'
 import { h64 } from 'xxhashjs'
 import { parse } from 'querystring'
-import { buffer } from './buffer'
-import { proxy } from './proxy'
 import * as curl from './curl'
-import { isMatch } from 'lodash'
+import { isMatch, pick } from 'lodash'
+import httpProxy from 'http-proxy'
+import { buffer } from './buffer'
+import assert from 'assert'
 
 const debug = Debug('yaktime:recorder')
 
@@ -18,6 +19,7 @@ type Unpacked<T> = T extends (infer U)[] ? U : T extends (...args: any[]) => inf
 type SerializedRequest = ReturnType<Recorder['serializeRequest']>
 type SerializedResponse = Unpacked<ReturnType<Recorder['serializeResponse']>>
 interface FullSerializedRequest extends SerializedRequest {
+  $loki?: number
   response: SerializedResponse
 }
 
@@ -25,19 +27,20 @@ export class Recorder {
   opts: YakTimeOpts
   host: string
   db: Promise<Loki>
+  proxy: httpProxy
   constructor (opts: YakTimeOpts, host: string) {
     this.opts = opts
     this.host = host
     this.db = getDB(opts)
+    this.proxy = httpProxy.createProxyServer({ target: host, xfwd: true, changeOrigin: true, autoRewrite: true })
   }
 
-  serializeRequest (req: IncomingMessage, body: any[]) {
+  serializeRequest (req: IncomingMessage, body: Buffer) {
     const fullUrl = new URL(req.url as string, this.host)
-    const { method = '', httpVersion, headers, trailers } = req
+    const { method, httpVersion, headers, trailers } = req
 
-    const bodyBuffer = Buffer.concat(body)
-    const bodyEncoded = bodyBuffer.toString('base64')
-    const bodyHash = h64(bodyBuffer, 0).toString(16)
+    const bodyEncoded = body.toString('base64')
+    const bodyHash = h64(body, 0).toString(16)
 
     return {
       host: fullUrl.host,
@@ -52,36 +55,48 @@ export class Recorder {
     }
   }
 
-  async serializeResponse (res: IncomingMessage) {
-    const statusCode = res.statusCode || 200
+  async serializeResponse (res: IncomingMessage, body: Buffer) {
+    const statusCode = res.statusCode as number
     const headers = res.headers
-    const body = Buffer.concat(await buffer<Buffer>(res)).toString('base64')
     const trailers = res.trailers
 
     return {
       statusCode,
       headers,
-      body,
+      body: body.toString('base64'),
       trailers
     }
   }
 
-  async respond (storedRes: SerializedResponse, res: ServerResponse) {
+  async respond (storedReq: FullSerializedRequest, res: ServerResponse) {
+    assert(res.headersSent === false, 'Response has already been delivered')
+    const storedRes = storedReq.response
     res.statusCode = storedRes.statusCode
-    res.writeHead(storedRes.statusCode, storedRes.headers)
-    res.addTrailers(storedRes.trailers || {})
-    res.end(Buffer.from(storedRes.body, 'base64'))
+    if (storedReq.trailers != null && storedReq.trailers !== {}) {
+      res.addTrailers(storedReq.trailers)
+    }
+    res.writeHead(storedRes.statusCode, { 'x-yakbak-tape': storedReq.$loki, ...storedReq.response.headers })
+    res.end(Buffer.from(storedReq.response.body, 'base64'))
   }
 
-  async record (req: IncomingMessage, body: Buffer[], host: string, opts: YakTimeOpts) {
-    ensureRecordingIsAllowed(req, opts)
+  async record (req: IncomingMessage, res: ServerResponse, body: Buffer): Promise<FullSerializedRequest> {
+    ensureRecordingIsAllowed(req, this.opts)
     debug('proxy', req.url)
-    const pres = await proxy(req, body, host)
-    debug(curl.response(pres))
-    ensureIsValidStatusCode(pres, opts)
-    debug('record', req.url)
     const request = this.serializeRequest(req, body)
-    const response = await this.serializeResponse(pres)
+
+    const proxyRes: IncomingMessage = await new Promise((resolve, reject) => {
+      this.proxy.once('proxyRes', async (proxyRes: IncomingMessage) => {
+        resolve(proxyRes)
+      })
+      this.proxy.once('error', reject)
+      this.proxy.web(req, res, { selfHandleResponse: true })
+    })
+
+    debug(curl.response(proxyRes))
+    debug('record', req.url)
+    ensureIsValidStatusCode(proxyRes, this.opts)
+    const proxiedResponseBody = await buffer(proxyRes)
+    const response = await this.serializeResponse(proxyRes, proxiedResponseBody)
     return this.save(request, response)
   }
 
@@ -91,13 +106,13 @@ export class Recorder {
     return tapes.add({ ...request, response })
   }
 
-  async read (req: IncomingMessage, body: Buffer[]) {
+  async read (req: IncomingMessage, body: Buffer) {
     const serializedRequest = this.serializeRequest(req, body)
     return this.load(serializedRequest)
   }
 
   async load (request: SerializedRequest): Promise<FullSerializedRequest | null> {
-    const { ignoredQueryFields = [], ignoredHeaders = [] } = this.opts.hasherOptions || {}
+    const { ignoredQueryFields = [], allowedHeaders = [] } = this.opts
     const db = await this.db
     const tapes = db.addCollection<FullSerializedRequest>('tapes', { disableMeta: true })
 
@@ -106,12 +121,9 @@ export class Recorder {
     const query = {
       ..._query
     }
-    const headers = {
-      ..._headers
-    }
+    const headers = pick(_headers, ['x-cassette-id', ...allowedHeaders])
 
     ignoredQueryFields.forEach(q => delete query[q])
-    ignoredHeaders.forEach(h => delete headers[h])
 
     const lokiQuery = {
       ...request,
@@ -119,36 +131,9 @@ export class Recorder {
       headers
     }
 
-    delete query.body
+    delete lokiQuery.body
+    delete lokiQuery.host
 
     return tapes.where(obj => isMatch(obj, lokiQuery))[0]
-  }
-}
-
-export class DbMigrator {
-  data: Buffer[] = []
-  headers: IncomingHttpHeaders = {}
-  statusCode = 200
-  setHeader (name: string, value: string) {
-    this.headers[name] = value
-  }
-  write (input: Buffer | string) {
-    this.data.push(Buffer.isBuffer(input) ? input : Buffer.from(input))
-  }
-
-  end (data?: any) {
-    if (data != null) {
-      this.write(data)
-    }
-    debug('finished migration')
-  }
-
-  toSerializedResponse (): SerializedResponse {
-    return {
-      statusCode: this.statusCode,
-      headers: this.headers,
-      body: Buffer.concat(this.data).toString('base64'),
-      trailers: {}
-    }
   }
 }

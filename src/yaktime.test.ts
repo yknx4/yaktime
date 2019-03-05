@@ -12,6 +12,7 @@ import { AddressInfo } from 'net'
 import { TestServer, createServer } from './test/helpers/server'
 import { Dir, createTmpdir } from './test/helpers/tmpdir'
 import { RequestHasher } from './util'
+import { getDB } from './db'
 
 const fixedUA = 'node-superagent/0.21.0'
 
@@ -20,6 +21,9 @@ describe('yakbak', () => {
   let server: TestServer
   let serverInfo: AddressInfo
   let tmpdir: Dir
+  let db: Loki
+
+  const tapeExists = (id: string = '-1') => db.getCollection('tapes').get(parseInt(id, 10)) != null
 
   beforeEach(async () => {
     server = await createServer()
@@ -32,9 +36,12 @@ describe('yakbak', () => {
 
   beforeEach(async () => {
     tmpdir = await createTmpdir()
+    db = await getDB({ dirname: tmpdir.dirname })
   })
 
   afterEach(async () => {
+    db.removeCollection('tapes')
+    db.close()
     await tmpdir.teardown()
   })
 
@@ -50,7 +57,7 @@ describe('yakbak', () => {
           .get('/record/1')
           .set('host', 'localhost:3001')
           .set('user-agent', fixedUA)
-          .expect('X-Yakbak-Tape', '1a574e91da6cf00ac18bc97abaed139e')
+          .expect('X-Yakbak-Tape', /\d+/)
           .expect('Content-Type', 'text/html')
           .expect(201, 'OK')
           .end(function (err) {
@@ -59,16 +66,16 @@ describe('yakbak', () => {
           })
       })
 
-      test('writes the tape to disk', done => {
+      test('writes the tape', done => {
         request(yakbak)
           .get('/record/2')
           .set('host', 'localhost:3001')
           .set('user-agent', fixedUA)
-          .expect('X-Yakbak-Tape', '3234ee470c8605a1837e08f218494326')
+          .expect('X-Yakbak-Tape', /\d+/)
           .expect('Content-Type', 'text/html')
           .expect(201, 'OK')
-          .end(function (err) {
-            expect(fs.existsSync(tmpdir.join('3234ee470c8605a1837e08f218494326.js'))).toBeTruthy()
+          .end(async (err, res) => {
+            expect(tapeExists(res.header['x-yakbak-tape'])).toEqual(true)
             done(err)
           })
       })
@@ -96,11 +103,11 @@ describe('yakbak', () => {
             .query({ date: new Date() }) // without the custom hash, this would always cause 404s
             .set('user-agent', fixedUA)
             .set('host', 'localhost:3001')
-            .expect('X-Yakbak-Tape', '3f142e515cb24d1af9e51e6869bf666f')
+            .expect('X-Yakbak-Tape', /\d+/)
             .expect('Content-Type', 'text/html')
             .expect(201, 'OK')
-            .end(function (err) {
-              expect(fs.existsSync(tmpdir.join('3f142e515cb24d1af9e51e6869bf666f.js'))).toBeTruthy()
+            .end(function (err, res) {
+              expect(tapeExists(res.header['x-yakbak-tape'])).toEqual(true)
               done(err)
             })
         })
@@ -180,6 +187,7 @@ describe('yakbak', () => {
   describe('playback', () => {
     let yakbak: any
     let yakbakWithDb: any
+    let id: number
     beforeEach(async () => {
       await tmpdir.teardown()
       await tmpdir.setup()
@@ -187,38 +195,40 @@ describe('yakbak', () => {
       yakbakWithDb = subject(`http://localhost:${serverInfo.port}`, { dirname: tmpdir.dirname, useDb: true, migrate: true })
     })
 
-    beforeEach(done => {
-      let file = '305c77b0a3ad7632e51c717408d8be0f.js'
-      let tape = [
-        'var path = require("path");',
-        'module.exports = function (req, res) {',
-        '  res.statusCode = 201;',
-        '  res.setHeader("content-type", "text/html")',
-        '  res.setHeader("x-yakbak-tape", path.basename(__filename, ".js"));',
-        '  res.end("YAY");',
-        '}',
-        ''
-      ].join('\n')
-
-      fs.writeFile(tmpdir.join(file), tape, done)
+    beforeEach(async () => {
+      const result = await db.addCollection('tapes', { disableMeta: true }).add({
+        path: '/playback/1',
+        body: '',
+        bodyHash: 'ef46db3751d8e999',
+        method: 'GET',
+        httpVersion: '1.1',
+        headers: {},
+        trailers: {},
+        query: {},
+        response: {
+          statusCode: 201,
+          headers: {
+            'content-type': 'text/html'
+          },
+          body: Buffer.from('YAY').toString('base64')
+        }
+      })
+      id = result.$loki
     })
 
-    const test1 = (yak: any, done: any) =>
+    const test1 = (yak: any) =>
       request(yak)
         .get('/playback/1')
         .set('user-agent', fixedUA)
         .set('host', 'localhost:3001')
-        .expect('X-Yakbak-Tape', '305c77b0a3ad7632e51c717408d8be0f')
+        .expect('X-Yakbak-Tape', `${id}`)
         .expect('Content-Type', 'text/html')
         .expect(201, 'YAY')
-        .end(function (err) {
-          expect(server.requests.length).toEqual(0)
-          done(err)
-        })
 
-    test('does not make a request to the server', done => {
-      test1(yakbak, done)
-      test1(yakbakWithDb, done)
+    test('does not make a request to the server', async () => {
+      await test1(yakbak)
+      await test1(yakbakWithDb)
+      expect(server.requests.length).toEqual(0)
     })
   })
 })

@@ -10,11 +10,11 @@ describe('buffer', () => {
     let str = new stream.PassThrough()
 
     subject(str)
-      .then(function(body) {
-        expect(body).toEqual([Buffer.from('a'), Buffer.from('b'), Buffer.from('c')])
+      .then(function (body) {
+        expect(body).toEqual(Buffer.from('abc'))
         done()
       })
-      .catch(function(err) {
+      .catch(function (err) {
         done(err)
       })
 
@@ -28,10 +28,10 @@ describe('buffer', () => {
     let str = new stream.PassThrough()
 
     subject(str)
-      .then(function() {
+      .then(function () {
         done(new Error('should have yielded an error'))
       })
-      .catch(function(err) {
+      .catch(function (err) {
         expect(err.message).toEqual('boom')
         done()
       })

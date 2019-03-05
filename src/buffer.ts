@@ -9,20 +9,15 @@ import { Readable } from 'stream'
  * @param - stream
  */
 
-export function buffer<T = any> (stream: Readable): Promise<T[]> {
-  return new Promise(function (resolve, reject) {
-    let data: T[] = []
-
-    stream.on('data', function (buf) {
-      data.push(buf)
+export function buffer (stream: Readable): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    let body = Buffer.from('')
+    stream.on('data', function (data) {
+      body = Buffer.concat([body, data])
     })
-
-    stream.on('error', function (err) {
-      reject(err)
-    })
-
     stream.on('end', function () {
-      resolve(data)
+      resolve(body)
     })
+    stream.on('error', reject)
   })
 }
