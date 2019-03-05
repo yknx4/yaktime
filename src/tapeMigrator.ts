@@ -41,10 +41,6 @@ export const dbTapeMigrator = (host: string, opts: YakTimeOpts) =>
     if (oldExists) {
       debug('migrating to db')
       debug('filename', oldFileName)
-      const newExists = (await recorder.read(req, body)) != null
-      if (newExists) {
-        return debug('skipping migration, it is already migrated')
-      }
 
       const migrator = new DbMigrator()
       require(oldFileName)(null, migrator)

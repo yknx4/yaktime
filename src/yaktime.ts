@@ -45,21 +45,16 @@ export function yaktime (host: string, opts: YakTimeOpts): YakTimeServer {
     try {
       await migrateIfRequired(host, opts, req, body)
 
-      if (opts.useDb !== true) {
+      if (opts.useDb === true) {
+        const recorder = new Recorder(opts, host)
+        const response = (await recorder.read(req, body)) || (await recorder.record(req, body, host, opts))
+        await recorder.respond(response.response, res)
+      } else {
         const filename = await resolveCassete(file).catch(recordIfNotFound(req, body, host, file, opts))
 
         trackHit(filename, hits)
         const tape: YakTimeServer = require(filename)
         tape(req, res)
-      } else {
-        const recorder = new Recorder(opts, host)
-        const existingResponse = await recorder.read(req, body)
-        if (existingResponse != null) {
-          await recorder.respond(existingResponse.response, res)
-        } else {
-          const response = await recorder.record(req, body, host, opts)
-          await recorder.respond(response.response, res)
-        }
       }
     } catch (err) {
       res.statusCode = err instanceof HttpError ? err.statusCode : 500

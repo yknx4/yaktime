@@ -69,8 +69,8 @@ export class Recorder {
   async respond (storedRes: SerializedResponse, res: ServerResponse) {
     res.statusCode = storedRes.statusCode
     res.writeHead(storedRes.statusCode, storedRes.headers)
-    res.setHeader('X-Yakbak-Tape', '')
     res.addTrailers(storedRes.trailers || {})
+    console.log(storedRes.body)
     res.end(Buffer.from(storedRes.body, 'base64'))
   }
 
@@ -133,18 +133,22 @@ export class DbMigrator {
   setHeader (name: string, value: string) {
     this.headers[name] = value
   }
-  write (input: Buffer) {
-    this.data.push(input)
+  write (input: Buffer | string) {
+    this.data.push(Buffer.isBuffer(input) ? input : Buffer.from(input))
   }
 
-  // tslint:disable-next-line:no-empty
-  end () {}
+  end (data?: any) {
+    if (data != null) {
+      this.write(data)
+    }
+    debug('finished migration')
+  }
 
   toSerializedResponse (): SerializedResponse {
     return {
       statusCode: this.statusCode,
       headers: this.headers,
-      body: Buffer.from(this.data).toString('base64'),
+      body: Buffer.concat(this.data).toString('base64'),
       trailers: {}
     }
   }

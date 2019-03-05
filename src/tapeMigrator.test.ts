@@ -91,7 +91,7 @@ describe('record', () => {
           path: '/',
           response: expect.objectContaining({
             statusCode: 201,
-            body: 'AA=='
+            body: 'T0s='
           })
         })
       )
