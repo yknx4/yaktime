@@ -70,7 +70,6 @@ export class Recorder {
     res.statusCode = storedRes.statusCode
     res.writeHead(storedRes.statusCode, storedRes.headers)
     res.addTrailers(storedRes.trailers || {})
-    console.log(storedRes.body)
     res.end(Buffer.from(storedRes.body, 'base64'))
   }
 
