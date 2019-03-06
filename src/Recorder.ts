@@ -135,8 +135,17 @@ export class Recorder {
 
     delete lokiQuery.body
     delete lokiQuery.host
+
     if (request.method === 'GET') {
       delete lokiQuery.bodyHash
+    }
+
+    if (lokiQuery == null || lokiQuery.trailers === {}) {
+      delete lokiQuery.trailers
+    }
+
+    if (lokiQuery == null || lokiQuery.headers === {}) {
+      delete lokiQuery.headers
     }
 
     debug('searching')
