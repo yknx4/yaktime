@@ -135,6 +135,12 @@ export class Recorder {
 
     delete lokiQuery.body
     delete lokiQuery.host
+    if (request.method === 'GET') {
+      delete lokiQuery.bodyHash
+    }
+
+    debug('searching')
+    debug(lokiQuery)
 
     return tapes.where(obj => isMatch(obj, lokiQuery))[0]
   }
