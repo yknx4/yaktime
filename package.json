@@ -36,7 +36,7 @@
     "jest-junit": "^6.2.1",
     "jest-runner-tsc": "^1.4.0",
     "lint-staged": "^8.1.3",
-    "madge": "^3.4.3",
+    "madge": "^4.0.1",
     "nodemon": "^1.18.9",
     "np": "^4.0.2",
     "prettier": "^1.16.4",
