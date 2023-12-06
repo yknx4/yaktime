@@ -74,7 +74,7 @@
     "@types/lokijs": "^1.5.2",
     "@types/mkdirp": "^0.5.2",
     "content-type": "^1.0.4",
-    "debug": "^4.1.1",
+    "debug": "^4.3.1",
     "fast-json-stable-stringify": "^2.0.0",
     "incoming-message-hash": "^3.2.2",
     "invariant": "^2.2.4",
